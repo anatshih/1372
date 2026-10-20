@@ -110,6 +110,7 @@
     var id = document.body.getAttribute("data-lesson");
     var L = FSIM.lessons[id];
     if (!root || !L) { if (root) root.textContent = "تعذّر تحميل محتوى الدرس."; return; }
+    root.textContent = "";
     document.title = L.title + " — مختبر إدارة الثغرات الافتراضي";
 
     var concepts = (L.explain && L.explain.cards) || [];
@@ -176,6 +177,7 @@
       if (!unlocked(st)) { live.textContent = "أنهِ المرحلة السابقة أولاً."; return; }
       if (phase === "practice" && st !== "practice") { setFocus(false); teardownPractice(); }
       phase = st;
+      document.body.setAttribute("data-active-phase", st);
       STAGES.forEach(function (s) { panels[s].hidden = s !== st; });
       if (!panels[st].getAttribute("data-built")) { build[st](); panels[st].setAttribute("data-built", "1"); }
       else if (st === "practice") buildPractice();
@@ -268,15 +270,19 @@
     };
 
     /* ================= PRACTICE ================= */
-    var launchers = {};
+    var launchers = {}, demoGeneration = 0;
     function teardownPractice() {
+      demoGeneration++;
+      bus.resetScope();
+      if (stage && stage.destroy) stage.destroy();
+      stage = null;
       if (watchCancel) { watchCancel(); watchCancel = null; }
       if (stepper) { stepper.destroy(); stepper = null; }
     }
 
     build.practice = function () {
       var pr = L.practice, p = panels.practice;
-      p.appendChild(h("h2#h-practice", { text: "التطبيق" }));
+      p.appendChild(h("h2#h-practice", { text: "التطبيق — تدريب داخل المتصفح" }));
       p.appendChild(h("div.practice-scenario", h("strong", { text: "السيناريو: " }), document.createTextNode(pr.scenario)));
       var modes = h("div.modes", { role: "group", "aria-label": "وضع التطبيق" }, h("span.label", { text: "الوضع:" }));
       [["guided", "جرّب بتوجيه"], ["watch", "شاهد"], ["free", "جرّب حراً"]].forEach(function (m) {
@@ -288,6 +294,7 @@
         });
         modes.appendChild(b);
       });
+      p.appendChild(h("p.muted", { text: "لا يوجد تسليم. تغيير الوضع أو الضغط على «من جديد» يعيد تجربة التطبيق من بدايتها؛ تقدم الدروس المحفوظ يبقى كما هو." }));
       var freeBtn = modes.querySelector('[data-mode="free"]');
       freeBtn.setAttribute("aria-disabled", "false");
       p.appendChild(modes);
@@ -302,7 +309,11 @@
       teardownPractice();
       var pr = L.practice;
       var stepsPanel = document.getElementById("steps-panel"), bar = document.getElementById("stage-bar"), stEl = document.getElementById("stage");
-      stepsPanel.textContent = ""; bar.textContent = ""; stEl.textContent = ""; launchers = {};
+      stepsPanel.textContent = "";
+      function setupStage() {
+      bus.resetScope();
+      if (stage && stage.destroy) stage.destroy();
+      bar.textContent = ""; stEl.textContent = ""; launchers = {};
       FSIM.core.sim.state = pr.state || "before";
       FSIM.core.sim.cwd = pr.cwd || null;
       FSIM.core.sim.preset = pr.preset || {}; /* e.g. scans already saved in earlier lessons (lesson 10) */
@@ -348,6 +359,8 @@
       full.addEventListener("click", function () { setFocus(!grid.classList.contains("is-focus")); });
       bar.appendChild(h("span.stage-tools", big, again, full));
       (pr.launchers || []).forEach(function (l) { if (l.auto) launch(l.tool, true); });
+      }
+      setupStage();
 
       var toNext = document.getElementById("to-interpret");
       toNext.hidden = false;
@@ -355,11 +368,13 @@
       if (mode === "free") {
         stepsPanel.appendChild(h("h3", { text: "التجربة الحرة" }));
         stepsPanel.appendChild(h("p", { text: pr.freeNote || "لا تلميحات هنا. حاول الوصول إلى الأهداف التالية بنفسك، ثم راجع التفسير." }));
+        stepsPanel.appendChild(h("p.muted", { text: "المربعات التالية قائمة تذكير ذاتية؛ لا تُحتسب تحققاً آلياً من التنفيذ." }));
         stepsPanel.appendChild(h("ul", pr.steps.map(function (s) { return h("li", h("label", h("input", { type: "checkbox" }), " " + (s.title || s.instruction))); })));
         return;
       }
-      stepsPanel.appendChild(h("h3", { text: mode === "watch" ? "عرض تلقائي" : "الخطوات" }));
-      if (mode === "guided") stepsPanel.appendChild(h("p.steps-help", { text: "نفّذ الخطوة داخل النافذة، ويتحقق الموقع منها تلقائياً وينقلك إلى التالية. عالق؟ اضغط «تلميح»." }));
+      stepsPanel.appendChild(h("h3", { text: mode === "watch" ? "شاهد خطوة بخطوة" : "الخطوات" }));
+      if (mode === "guided") stepsPanel.appendChild(h("p.steps-help", { text: "نفّذ داخل النافذة للانتقال تلقائياً. «أرني هذه الخطوة» يعرض التنفيذ ثم يتوقف حتى تضغط «فهمت». المشاهدة تُسجَّل منفصلة عن التطبيق بنفسك." }));
+      if (mode === "watch") stepsPanel.appendChild(h("p.steps-help", { text: "اضغط «أرني هذه الخطوة»، شاهد التنفيذ، ثم اضغط «فهمت» عندما تكون مستعداً. يمكنك إعادة العرض قبل الانتقال." }));
       var host = h("div"); stepsPanel.appendChild(host);
       stepper = FSIM.core.stepper.create(host, pr.steps, {
         mode: mode,
@@ -368,34 +383,34 @@
           var w = m && stage && stage.get(m[1]);
           if (w && w.isOpen) w.focus();
         },
-        onShow: function (st) { return runDemo(st); },
+        onShow: async function (st, replay) {
+          var generation = demoGeneration;
+          function alive() { return phase === "practice" && demoGeneration === generation; }
+          if (replay) {
+            setupStage();
+            var fast = FSIM.core.config.fast;
+            FSIM.core.config.fast = true;
+            try {
+              for (var i = 0; i < pr.steps.indexOf(st); i++) await FSIM.core.demo.run(pr.steps[i], stage, launchers, alive);
+            } finally { FSIM.core.config.fast = fast; }
+          }
+          return FSIM.core.demo.run(st, stage, launchers, alive);
+        },
         onFill: function (st) { var w = stage.get(st.expect.tool || "cmd"); var t = w && w.body.api && w.body.api.term; if (t) { w.open(); t.fill(st.solution); } },
-        onComplete: function () {
+        onComplete: function (evidence) {
+          var observed = evidence.filter(function (x) { return x.method === "observed"; }).length;
+          P.recordPractice(id, evidence);
           if (mode === "guided") {
             P.mark(id, "practice"); refreshNav(); refreshModeButtons(); toNext.hidden = false;
             var goI = h("button.btn.btn-primary", { type: "button", text: "تابع إلى التفسير ←" });
             goI.addEventListener("click", function () { setFocus(false); go("interpret"); });
-            host.appendChild(h("div.completion", { role: "status" }, h("strong", { text: "أحسنت! " }), document.createTextNode("أكملت التطبيق. الخطوة التالية: تفسير ما رأيت. "), goI));
+            host.appendChild(h("div.completion", { role: "status" }, h("strong", { text: "أحسنت! " }), document.createTextNode(observed ? "أنهيت الخطوات: شاهدت " + observed + " ونفّذت بنفسك " + (evidence.length - observed) + ". أعد التجربة دون العرض لترسّخ المهارة، أو تابع إلى التفسير. " : "أكملت التطبيق بنفسك. تابع إلى تفسير النتائج. "), goI));
           } else if (mode === "watch") {
-            host.appendChild(h("div.note.note-info", { text: "انتهى العرض. جرّب بنفسك في الوضع الموجَّه." }));
+            host.appendChild(h("div.note.note-info", { text: "شاهدت جميع الخطوات. جرّب بنفسك في الوضع الموجَّه؛ المشاهدة وحدها لا تثبت إتقان التنفيذ." }));
           }
         }
       });
-      if (mode === "watch") {
-        var play = h("button.btn.btn-primary", { type: "button", text: "▶ ابدأ العرض التلقائي" });
-        stepsPanel.appendChild(h("div.hint-row", play));
-        var running = false;
-        play.addEventListener("click", function () {
-          if (running) { watchCancel && watchCancel(); return; }
-          running = true; play.textContent = "⏸ إيقاف";
-          var cancelled = false; watchCancel = function () { cancelled = true; running = false; play.textContent = "▶ استئناف"; watchCancel = null; };
-          (function loop() {
-            if (cancelled || !stepper || stepper.isFinished()) { if (!cancelled) { running = false; play.textContent = "انتهى العرض"; } return; }
-            var st = stepper.current();
-            Promise.resolve(runDemo(st)).then(function () { return sleep(1400); }).then(loop);
-          })();
-        });
-      }
+
     }
 
     function refreshModeButtons() { /* free mode is always enabled */ }
@@ -407,20 +422,6 @@
       grid.classList.toggle("is-focus", on); document.body.classList.toggle("fsim-focus", on);
       var b = grid.querySelector("[data-focus-toggle]"); if (b) { b.setAttribute("aria-pressed", String(on)); b.textContent = on ? "✕ إنهاء ملء الشاشة" : "⛶ ملء الشاشة"; }
       if (on) document.addEventListener("keydown", onEsc); else document.removeEventListener("keydown", onEsc);
-    }
-
-    function runDemo(st) {
-      var d = st.demo || st; if (!d) return Promise.resolve();
-      if (Array.isArray(d)) return d.reduce(function (p, one) { return p.then(function () { return runDemo(one).then(function () { return sleep(700); }); }); }, Promise.resolve());
-      if (d.kind === "command") {
-        var win = stage.get(d.tool) || FSIM.tools[d.tool].open(stage, {});
-        win.open();
-        return win.body.api.term.typeAndRun(d.text);
-      }
-      if (d.kind === "launch") { var b = launchers[d.tool]; if (b) b.click(); return Promise.resolve(); }
-      if (d.kind === "state") { var s = stage._sel; if (s) { s.value = d.value; s.dispatchEvent(new Event("change")); } return Promise.resolve(); }
-      if (d.kind === "ui") { var w = stage.get(d.tool); if (w && w.body.api) { w.open(); var a = w.body.api[d.action]; if (a) return Promise.resolve(a.apply(null, [].concat(d.arg))); } return Promise.resolve(); }
-      return Promise.resolve();
     }
 
     /* ================= INTERPRET ================= */
@@ -437,7 +438,7 @@
       var coreHl = (I.highlights || []).filter(function (x) { return x.core; });
       if (!coreHl.length) coreHl = I.highlights || [];
       var found = {}, totalHl = coreHl.length;
-      var counter = h("p.annot-count", { "aria-live": "polite", text: "اضغط القيم الأساسية الأربع (بإطار أزرق سميك). اكتشفت 0 من " + totalHl + "." });
+      var counter = h("p.annot-count", { "aria-live": "polite", text: "اضغط القيم الأساسية (بإطار أزرق سميك). اكتشفت 0 من " + totalHl + "." });
       p.appendChild(tools); p.appendChild(counter); p.appendChild(paneHost); p.appendChild(meaning);
       var activeSrc = null;
 
@@ -574,25 +575,11 @@
       }
       function showCompletion() {
         done.hidden = false; done.textContent = "";
-        var inp = h("input", { id: "student-id", type: "text", inputmode: "numeric", autocomplete: "off", "aria-describedby": "sid-help" });
-        inp.value = P.getStudent();
-        var out = h("div", { "aria-live": "polite" });
-        var gen = h("button.btn.btn-primary", { type: "button", text: "أنشئ رمز الإنجاز" });
-        function show() {
-          out.textContent = "";
-          if (!inp.value.trim()) { out.textContent = "أدخل رقمك الجامعي أولاً."; return; }
-          P.setStudent(inp.value);
-          out.appendChild(h("p", { text: "رمز إنجاز هذا الدرس:" }));
-          out.appendChild(h("span.code-chip", { text: P.code(inp.value, id, L.axis), "data-testid": "completion-code" }));
-        }
-        gen.addEventListener("click", show);
-        done.appendChild(h("div.completion", h("h3", { text: "🎉 أنهيت الدرس" }),
-          CB ? h("div.case-found", h("p", h("strong", { text: "أُضيف إلى تقرير تقييم الأمن:" })), h("p", { text: CB.finding }),
-            h("a", { href: "../mission.html#report", text: "افتح تقرير تقييم الأمن" })) : null,
-          h("p", { text: "أجبت عن كل الأسئلة. يمكنك الآن إنشاء رمز إنجاز يتحقق منه الأستاذ." }),
-          h("div.field", h("label", { "for": "student-id", text: "رقمك الجامعي" }), inp, h("small.muted#sid-help", { text: "يُستخدم محلياً داخل المتصفح لتوليد الرمز ولا يُرسل إلى أي جهة." })),
-          gen, out, pos.next ? h("p", h("a.btn.btn-primary", { href: pos.next.id + ".html", text: "الدرس التالي: " + pos.next.title + " ←" })) : null));
-        if (inp.value.trim()) show();
+        done.appendChild(h("div.completion", h("h3", { text: "أنهيت أسئلة التفسير" }),
+          h("p", { text: "هذا الموقع للتدريب الذاتي فقط؛ لا يوجد تسليم أو رمز إنجاز مطلوب أو مناقشة مطلوبة." }),
+          CB ? h("div.case-found", h("p", { text: CB.finding }), h("a", { href: "../mission.html#report", text: "راجع نتائج الحالة التدريبية" })) : null,
+          h("p", { text: "اختبر نفسك: أعد التطبيق في وضع «جرّب حراً» وحاول تنفيذ الخطوات دون العرض أو التلميحات، ثم قارن النتائج في التفسير." }),
+          pos.next ? h("p", h("a.btn.btn-primary", { href: pos.next.id + ".html", text: "الدرس التالي: " + pos.next.title + " ←" })) : null));
       }
 
       /* conclusion */

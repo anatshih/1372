@@ -6,6 +6,7 @@
   var FSIM = window.FSIM, h = FSIM.core.h, bus = FSIM.core.bus, F = function () { return FSIM.data.case.files; };
 
   function build(body, win) {
+    var bus = FSIM.core.bus.scoped();
     var st = { sel: null, inside: null };
     var root = h("div.ar.sz"); body.appendChild(root);
     root.appendChild(FSIM.core.menubar(root, { File: [["Open"], ["Rename"], ["Delete"], ["Properties"]], Edit: [["Select All"]], View: [["Details"]], Favorites: [["Add folder to Favorites as"]], Tools: [["Options..."], ["Benchmark"]], Help: [["Contents..."], ["About 7-Zip..."]] }, function () {}));

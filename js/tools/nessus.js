@@ -28,6 +28,7 @@
   }
 
   function build(body, win) {
+    var bus = FSIM.core.bus.scoped();
     var st = { view: "scans", scan: null, tab: "Hosts", tmplTab: "Vulnerabilities", formTab: "Settings", vuln: null, host: null, running: false, query: "" };
     /* lesson 10: the baseline scan saved in lesson 3 is already in My Scans */
     if ((FSIM.core.sim.preset || {}).nessusBaseline) st.scan = { name: N().scanName, status: "completed", state: "before", targets: C().network.cidr };
@@ -300,7 +301,7 @@
       tab: function (t) { st.tab = t; st.host = null; render(); bus.emit("nessus:tab", { tab: t }); },
       vuln: function (id) { st.vuln = id; bus.emit("nessus:vuln", { id: id }); go("vuln"); },
       host: function (ip) { st.tab = "Hosts"; st.host = ip; render(); bus.emit("nessus:host", { ip: ip }); },
-      waitDone: function () { return new Promise(function (res) { (function w() { if (st.scan && st.scan.status === "completed") res(); else setTimeout(w, 30); })(); }); }
+      waitDone: function () { return new Promise(function (res) { (function w() { if (!body.isConnected || (st.scan && st.scan.status === "completed")) res(); else setTimeout(w, 30); })(); }); }
     };
   }
 

@@ -3,6 +3,7 @@
   "use strict";
   var FSIM = (window.FSIM = window.FSIM || {});
   FSIM.core = FSIM.core || {};
+  FSIM.core.sim = FSIM.core.sim || { state: "before", data: {} };
   FSIM.tools = FSIM.tools || {};
   FSIM.data = FSIM.data || {};
   FSIM.lessons = FSIM.lessons || {};
@@ -52,8 +53,17 @@
   };
 
   /* tiny event bus shared by tools and the stepper */
-  var listeners = {};
+  var listeners = {}, scopeId = 0, scopedOffs = [];
   FSIM.core.bus = {
+    resetScope: function () { scopeId++; scopedOffs.forEach(function (off) { off(); }); scopedOffs = []; },
+    scoped: function () {
+      var id = scopeId, bus = FSIM.core.bus;
+      return {
+        emit: function (name, data) { if (id === scopeId) bus.emit(name, data); },
+        on: function (name, fn) { var off = bus.on(name, function (data) { if (id === scopeId) fn(data); }); scopedOffs.push(off); return off; },
+        off: bus.off
+      };
+    },
     on: function (name, fn) { (listeners[name] = listeners[name] || []).push(fn); return function () { FSIM.core.bus.off(name, fn); }; },
     off: function (name, fn) { listeners[name] = (listeners[name] || []).filter(function (f) { return f !== fn; }); },
     emit: function (name, payload) { (listeners[name] || []).slice().forEach(function (f) { try { f(payload || {}); } catch (e) { if (window.console) console.error(e); } }); (listeners["*"] || []).slice().forEach(function (f) { try { f(name, payload || {}); } catch (e) { /* ignore */ } }); }

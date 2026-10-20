@@ -26,6 +26,7 @@
   }
 
   function build(body, win) {
+    var bus = FSIM.core.bus.scoped();
     var st = { tab: "Everything", sel: null, filter: "", removed: {}, disabled: {}, opts: { "Hide Empty Locations": true, "Hide Microsoft Entries": false, "Hide Windows Entries": true } };
     var root = h("div.ar"); body.appendChild(root);
     var state = function () { return FSIM.core.sim.state; };

@@ -20,6 +20,7 @@
   function serviceRows() { return C().services.map(function (s) { return { key: s[0], cells: s }; }); }
 
   function build(body, win) {
+    var bus = FSIM.core.bus.scoped();
     var page = "Details", query = "";
     var root = h("div.tm"); body.appendChild(root);
     var search = h("input.tm-search", { type: "search", placeholder: "Type a name, publisher, or PID to search", "aria-label": "Search", spellcheck: "false" });

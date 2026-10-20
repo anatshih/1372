@@ -40,6 +40,14 @@
     isDone: function (id, stage) { return !!rec(id)[stage]; },
     complete: function (id) { var r = rec(id); return stagesOf(id).every(function (s) { return r[s]; }); },
     mark: function (id, stage, val) { rec(id)[stage] = val !== false; store.save(); },
+    recordPractice: function (id, evidence) {
+      var r = rec(id);
+      r.lastPracticeEvidence = evidence;
+      if (r.practiceMethod === "independent") { store.save(); return; }
+      r.practiceEvidence = evidence;
+      r.practiceMethod = evidence.every(function (x) { return x.method === "independent"; }) ? "independent" : evidence.every(function (x) { return x.method === "observed"; }) ? "observed" : "mixed";
+      store.save();
+    },
     markCard: function (id, cardId) { rec(id).cards[cardId] = true; store.save(); },
     markQuestion: function (id, qi) { rec(id).questions[qi] = true; store.save(); },
     setLast: function (id, stage) { store.get().ui.last = { lesson: id, stage: stage }; store.save(); },

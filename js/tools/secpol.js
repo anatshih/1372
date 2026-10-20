@@ -17,6 +17,7 @@
   }
 
   function build(body, win) {
+    var bus = FSIM.core.bus.scoped();
     var d = FSIM.core.sim.data, st = { node: "Security Settings", vals: {} };
     S().password.concat(S().lockout).forEach(function (r) { st.vals[r[0]] = r[1]; });
     d.policy = { threshold: 0 };

@@ -24,14 +24,14 @@
   --content-w: 1240px;
 
   /* light theme (site UI) */
-  --bg: #f5f7fa;
+  --bg: #f3f6fa;
   --surface: #ffffff;
   --surface-2: #eef2f7;
   --border: #c5cfdb;
   --text: #17202b;
   --text-muted: #44505f;
-  --primary: #1d4ed8;          /* blue = current / interpretation */
-  --primary-soft: #e3ebff;
+  --primary: #174e9c;          /* blue = current / interpretation */
+  --primary-soft: #eaf1fb;
   --on-primary: #ffffff;
   --success: #166534;          /* green = done */
   --success-soft: #dcf5e4;
@@ -40,10 +40,10 @@
   --danger: #a61b1b;           /* red = risk indicator only */
   --danger-soft: #fde1e1;
   --focus: #b45309;
-  --banner-bg: #3b2a00;
-  --banner-text: #fff7de;
-  --banner-link: #ffd36b;
-  --shadow: 0 2px 10px rgba(15, 30, 55, 0.12);
+  --banner-bg: #192f4a;
+  --banner-text: #f1f5fb;
+  --banner-link: #bcd6ff;
+  --shadow: 0 2px 6px rgba(15, 30, 55, 0.06);
 
   /* tool windows — native colours, NOT affected by the site theme (CLAUDE.md §8) */
   --win-frame: #f3f3f3;

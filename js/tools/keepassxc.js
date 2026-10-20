@@ -63,6 +63,7 @@
   }
 
   function build(body, win) {
+    var bus = FSIM.core.bus.scoped();
     var st = { view: "welcome", db: null, entries: [], sel: null, timer: null };
     var root = h("div.kp"); body.appendChild(root);
     root.appendChild(FSIM.core.menubar(root, { Database: [["New Database...", "new"], ["Open Database..."], ["Save Database"], ["Lock Database", "lock"]], Entries: [["New Entry...", "entry"], ["Copy Password", "copy"]], Groups: [["New Group..."]], Tools: [["Password Generator", "gen"], ["Settings"]], View: [["Theme"]], Help: [["About"]] }, function (m, k) {

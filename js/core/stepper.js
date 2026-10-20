@@ -7,7 +7,7 @@
   function Stepper(host, steps, opts) {
     opts = opts || {};
     var idx = 0, hintLevel = 0, done = [], offs = [], finished = false;
-    var mode = opts.mode || "guided";
+    var mode = opts.mode || "guided", demonstrating = false, demoMatched = false, awaiting = false, destroyed = false, evidence = [];
     var list = h("ol.step-list");
     var progress = h("p.steps-progress", { "aria-live": "polite" });
     host.appendChild(progress);
@@ -60,13 +60,35 @@
       var fb = h("div.step-feedback", { role: "status", hidden: "" });
       var hintBox = h("div.hint-text", { hidden: "", "aria-live": "polite" });
       box.appendChild(fb); box.appendChild(hintBox);
-      if (mode === "guided") {
+      if (mode === "guided" || mode === "watch") {
         var btn = h("button.btn", { type: "button", text: "تلميح" });
         var row = h("div.hint-row", btn);
         if (opts.onShow && st.demo) {
           var showB = h("button.btn.btn-show", { type: "button", text: "▶ أرني هذه الخطوة" });
-          showB.addEventListener("click", function () { showB.disabled = true; showB.textContent = "…"; Promise.resolve(opts.onShow(st)).then(function () { showB.disabled = false; showB.textContent = "▶ أرني هذه الخطوة"; }); });
+          var confirm = h("button.btn.btn-primary.btn-understood", { type: "button", hidden: "", text: "فهمت، انتقل للخطوة التالية" });
+          confirm.addEventListener("click", function () { if (!demonstrating && awaiting && !destroyed) advance("observed"); });
+          showB.addEventListener("click", function () {
+            if (demonstrating || destroyed) return;
+            var replay = showB.getAttribute("data-tried") === "true";
+            showB.setAttribute("data-tried", "true");
+            demonstrating = true; demoMatched = false; awaiting = false; confirm.hidden = true;
+            showB.disabled = true; showB.textContent = "جارٍ عرض التنفيذ…";
+            feedback("شاهد التنفيذ داخل نافذة البرنامج. سنبقى عند هذه الخطوة حتى تؤكد فهمك.");
+            Promise.resolve().then(function () { return opts.onShow(st, replay); }).then(function () {
+              if (destroyed) return;
+              if (!demoMatched) throw new Error("The demonstrated action did not produce this step's expected result");
+              demonstrating = false; awaiting = true; showB.disabled = false; showB.textContent = "↺ أعد العرض";
+              feedback("ماذا حدث؟ " + (st.result || "اكتمل عرض هذه الخطوة.") + " هذه مشاهدة؛ يمكنك تطبيق الدرس بنفسك لاحقاً.");
+              confirm.hidden = false;
+              confirm.focus({ preventScroll: true });
+            }).catch(function () {
+              if (destroyed) return;
+              demonstrating = false; awaiting = false; showB.disabled = false; showB.textContent = "↺ أعد العرض";
+              feedback("لم يكتمل العرض. أعد المحاولة، أو اضغط «من جديد» لإعادة التطبيق.");
+            });
+          });
           row.appendChild(showB);
+          row.appendChild(confirm);
         }
         btn.addEventListener("click", function () {
           hintLevel = Math.min(3, hintLevel + 1);
@@ -83,6 +105,7 @@
           btn.textContent = hintLevel < 3 ? "تلميح آخر" : "لا مزيد من التلميحات";
           if (hintLevel >= 3) btn.setAttribute("aria-disabled", "true");
         });
+        if (mode === "watch") btn.hidden = true;
         box.appendChild(row);
       }
       box._fb = fb;
@@ -95,14 +118,16 @@
       var fb = d._fb; fb.hidden = false; fb.textContent = msg;
     }
 
-    function advance() {
+    function advance(method) {
+      awaiting = false;
+      evidence.push({ step: steps[idx].id, method: method || "independent" });
       clearHl();
       done.push(steps[idx].id);
       var prevLi = items[idx];
       prevLi.classList.add("just-done"); setTimeout(function () { prevLi.classList.remove("just-done"); }, 1400);
       progress.textContent = "✔ أُنجزت الخطوة " + (idx + 1);
       idx++; hintLevel = 0;
-      if (idx >= steps.length) { finished = true; render(); if (opts.onComplete) opts.onComplete(); }
+      if (idx >= steps.length) { finished = true; render(); if (opts.onComplete) opts.onComplete(evidence.slice()); }
       else { render(); if (opts.onStep) opts.onStep(steps[idx], idx); }
     }
 
@@ -124,7 +149,9 @@
     }
 
     offs.push(bus.on("*", function (name, payload) {
-      if (finished || idx >= steps.length) return;
+      if (destroyed || finished || idx >= steps.length) return;
+      if (demonstrating) { if (matches(steps[idx], name, payload) === true) demoMatched = true; return; }
+      if (awaiting || mode === "watch") return;
       var st = steps[idx];
       var r = matches(st, name, payload);
       if (r === true) { advance(); }
@@ -142,7 +169,7 @@
       current: function () { return finished ? null : steps[idx]; },
       index: function () { return idx; },
       isFinished: function () { return finished; },
-      destroy: function () { clearTimeout(nudgeTimer); offs.forEach(function (o) { o(); }); clearHl(); host.textContent = ""; }
+      destroy: function () { destroyed = true; clearTimeout(nudgeTimer); offs.forEach(function (o) { o(); }); clearHl(); host.textContent = ""; }
     };
   }
 

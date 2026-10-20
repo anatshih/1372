@@ -32,6 +32,7 @@
   }
 
   function build(body, win) {
+    var bus = FSIM.core.bus.scoped();
     var st = { node: "Event Viewer (Local)", ids: null, sel: null };
     var root = h("div.mmc"); body.appendChild(root);
     root.appendChild(FSIM.core.menubar(root, { File: [["Open Saved Log..."], ["Exit"]], Action: [["Filter Current Log...", "filter"], ["Refresh", "refresh"]], View: [["Customize..."]], Help: [["Help Topics"]] }, function (m, k) { if (k === "filter") filterDlg(); else render(); }));

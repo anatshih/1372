@@ -5,7 +5,7 @@ window.FSIM = window.FSIM || {}; window.FSIM.data = window.FSIM.data || {};
 window.FSIM.data.mission = {
   title: "مهمتك",
   intro: [
-    "مكتب صغير وهمي اسمه «مكتب السنابل للمحاسبة» فيه أربعة أجهزة وطابعة. طلب منك أن تكتشف مشكلات الأمان في شبكته وتصلحها، ثم تسلّمه تقريراً."
+    "مكتب صغير وهمي اسمه «مكتب السنابل للمحاسبة» فيه أربعة أجهزة وطابعة. طلب منك أن تكتشف مشكلات الأمان في شبكته وتصلحها، ثم تقرأ نموذج تقرير يفسّر النتائج. هذه حالة تدريبية وليست مهمة للتسليم."
   ],
   promise: "كل درس خطوة واحدة من هذه المهمة، ببرنامج حقيقي يستخدمه المدافعون اليوم.",
   axes: [
@@ -21,7 +21,7 @@ window.FSIM.data.mission = {
     scope: [["الجهة", "مكتب السنابل للمحاسبة (وهمي) — sanabel.example"], ["الشبكة", "192.168.50.0/24 (خمسة أجهزة: GW، FILESRV، ACC-PC1، ACC-PC2، PRINTER)"], ["المدة", "2026-10-11 إلى 2026-10-15"], ["الأدوات", "netstat، Task Manager، Zenmap، Nessus Essentials، Windows Update، Microsoft Defender، Autoruns، Windows Defender Firewall، Wireshark، Local Security Policy، Event Viewer، KeePassXC، 7-Zip، cipher"]],
     evidence: { F1: "Update history: KB5099901 Successfully installed on 10/13/2026؛ إعادة الفحص: لا V01.", F2: "Autoruns: حُذف RemoteHelper و\RemoteHelperUpdate؛ Zenmap: اختفى 5900.", F3: "Protection history: Threat quarantined (Trojan:Win32/FakeInv.A).", F4: "secpol: الطول 14، القفل بعد 5؛ Event Viewer: 4740؛ خزنة KeePassXC.", F5: "salaries-2026.7z (AES-256 مع تشفير الأسماء)، والأصل محذوف، وcipher /w.", F6: "RDP مقيّد على 192.168.50.22؛ يبقى تفعيل NLA.", F7: "Wireshark: كلمة مرور Telnet مقروءة؛ يحتاج تعطيل Telnet في الطابعة." },
     recommendations: ["تفعيل التحديث التلقائي وتحديد Active hours.", "إظهار امتدادات الملفات وتدريب الموظفين على مرفقات البريد.", "تفعيل NLA لسطح المكتب البعيد.", "تعطيل Telnet في الطابعة (أو تحديث برنامجها الثابت عبر المورّد).", "تشفير أقراص الأجهزة بـ BitLocker.", "التحقق متعدد العوامل (MFA) للبريد.", "نسخ احتياطي 3-2-1 بنسخة غير متصلة.", "إعادة التقييم بعد 3 أشهر (يناير 2027)."],
-    intro: "كل مشكلة تبدأ «مفتوحة» (أحمر)، وتصبح «مغلقة» (أخضر) حين تُنهي الدرس الذي يعالجها، أو «متبقية» (برتقالي) حين يبقى منها ما يحتاج إجراءً من المكتب.",
+    intro: "تبدأ المشكلة «مفتوحة». بعد درس المعالجة تصبح «تمت المعالجة — بانتظار التحقق»، ولا تصبح «مغلقة» إلا بعد إعادة الفحص في الدرس 10. «متبقية» تعني أن إجراءً إضافياً ما زال مطلوباً.",
     labels: { open: "مفتوحة", closed: "مغلقة", residual: "متبقية" }
   },
   /* Unit 13 timeline (from the instructor's Unit 13 slides), shown on the home page under "اعرف أكثر" */

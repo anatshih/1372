@@ -25,6 +25,7 @@
   }
 
   function build(body, win) {
+    var bus = FSIM.core.bus.scoped();
     var st = { page: "Home", phase: "available", busy: false, prog: [0, 0] };
     var root = h("div.st"); body.appendChild(root);
     var nav = h("nav.st-nav", { "aria-label": "Settings" });
@@ -113,8 +114,8 @@
     show("Home");
     body.api = {
       show: show, install: install, restart: restart,
-      waitInstalled: function () { return new Promise(function (r) { (function w() { if (st.phase === "restart" || st.phase === "uptodate") r(); else setTimeout(w, 30); })(); }); },
-      waitRestarted: function () { return new Promise(function (r) { (function w() { if (st.phase === "uptodate") r(); else setTimeout(w, 30); })(); }); },
+      waitInstalled: function () { return new Promise(function (r) { (function w() { if (!body.isConnected || st.phase === "restart" || st.phase === "uptodate") r(); else setTimeout(w, 30); })(); }); },
+      waitRestarted: function () { return new Promise(function (r) { (function w() { if (!body.isConnected || st.phase === "uptodate") r(); else setTimeout(w, 30); })(); }); },
       history: function () { show("Update history"); bus.emit("winupdate:history", {}); }
     };
   }

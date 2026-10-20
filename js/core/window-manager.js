@@ -128,6 +128,7 @@
 
     return {
       create: create,
+      destroy: function () { Object.keys(wins).forEach(function (k) { if (wins[k].onDestroy) wins[k].onDestroy(); wins[k].el.remove(); }); wins = {}; },
       get: function (id) { return wins[id] || null; },
       isOpen: function (id) { return !!(wins[id] && wins[id].isOpen); },
       list: function () { return Object.keys(wins).map(function (k) { return wins[k]; }); }

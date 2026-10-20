@@ -103,6 +103,7 @@
   }
 
   function build(body, win) {
+    var bus = FSIM.core.bus.scoped();
     var st = { running: false, scans: [], hosts: {}, view: "Hosts", sel: null, svc: null, tab: "Nmap Output" };
     var root = h("div.zm"); body.appendChild(root);
     root.appendChild(FSIM.core.menubar(root, MENUS, function (menu, key) {
@@ -316,7 +317,7 @@
       setTarget: function (v) { target.value = v; syncCommand(); },
       setProfile: function (v) { profile.value = v; syncCommand(); },
       scan: scan,
-      run: function (prof, t) { profile.value = prof; target.value = t; syncCommand(); scan(); return new Promise(function (res) { (function wait() { if (st.running) setTimeout(wait, 30); else res(); })(); }); },
+      run: function (prof, t) { profile.value = prof; target.value = t; syncCommand(); scan(); return new Promise(function (res) { (function wait() { if (body.isConnected && st.running) setTimeout(wait, 30); else res(); })(); }); },
       showTab: showTab, setView: setView, compare: compare,
       selectHost: function (ip) { var n = list.querySelector('[data-ip="' + ip + '"]'); if (n) n.click(); },
       selectService: function (s) { setView("Services"); var n = list.querySelector('[data-service="' + s + '"]'); if (n) n.click(); }

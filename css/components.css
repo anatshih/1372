@@ -306,3 +306,32 @@ body.fsim-focus { overflow: hidden; }
 .annot.is-core { outline: 3px solid var(--primary); outline-offset: 1px; }
 .extra-questions { margin-block: var(--sp-3); }
 .extra-questions summary { cursor: pointer; font-weight: 600; }
+
+/* Student training workspace: current action first, stable semantic colours. */
+.training-note { padding: var(--sp-3) var(--sp-4); border-inline-start: 4px solid var(--primary); background: var(--primary-soft); color: var(--text); font-weight: 600; max-inline-size: 78ch; }
+.hero { max-inline-size: 960px; padding-block: var(--sp-5) var(--sp-6); }
+.hero h1 { font-size: clamp(1.8rem, 3.5vw, 2.7rem); line-height: 1.5; }
+.lesson-card { box-shadow: none; border-block-start: 3px solid var(--border); }
+.lesson-card.is-next { border-color: var(--primary); }
+.student-help details { border-block-start: 1px solid var(--border); padding-block: var(--sp-3); }
+.student-help summary { cursor: pointer; font-weight: 600; min-block-size: var(--touch); display: list-item; align-content: center; }
+.student-help p { max-inline-size: 78ch; margin-block-end: 0; }
+.unit-links { display: flex; flex-direction: column; gap: var(--sp-2); margin-block-start: var(--sp-2); }
+.unit-links a { min-block-size: var(--touch); align-content: center; }
+.status-chip.is-pending { background: var(--warn-soft); border-color: var(--warn); color: var(--warn); }
+.step.is-current { box-shadow: none; border-color: var(--primary); }
+.btn-understood { inline-size: 100%; text-align: center; white-space: normal; }
+.demo-caption { background: var(--primary-soft); border: 1px solid var(--primary); color: var(--text); padding: var(--sp-3); margin-block-end: var(--sp-3); border-radius: var(--radius-sm); font-weight: 600; }
+.stage.is-demonstrating { pointer-events: none; }
+.stage.is-demonstrating .fsim-hl { outline: 3px solid var(--hl-outline); outline-offset: 3px; }
+body[data-active-phase="practice"] .lesson-head .guide-box,
+body[data-active-phase="practice"] .lesson-head .objectives,
+body[data-active-phase="practice"] #lesson-root > .case-box { display: none; }
+body[data-active-phase="practice"] .lesson-head h1 { font-size: var(--fs-h2); margin-block: var(--sp-2); }
+.steps-help { color: var(--text-muted); font-size: var(--fs-small); line-height: 1.8; }
+.phases { scroll-margin-block-start: var(--sp-3); }
+.step-result { font-size: var(--fs-small); }
+.loading-state { margin-block: var(--sp-5); }
+@media (max-width: 767px) { .hero h1 { font-size: 1.8rem; } .training-note { font-size: var(--fs-small); } .demo-caption { position: sticky; inset-block-start: 0; z-index: 5; } }
+
+#page-root > details.card { margin-block: var(--sp-4); }

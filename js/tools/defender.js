@@ -8,6 +8,7 @@
   var ACTIVE = { "Home": 1, "Virus & threat protection": 1, "Protection history": 1 };
 
   function build(body, win) {
+    var bus = FSIM.core.bus.scoped();
     var st = { page: "Home", sub: null, sigs: false, scanning: null, found: {}, status: {}, history: [], lastScan: D().lastScan, lastFiles: null, scanType: "Quick scan", folder: null };
     var root = h("div.st.sec"); body.appendChild(root);
     var nav = h("nav.st-nav", { "aria-label": "Windows Security" });
@@ -189,7 +190,7 @@
       updateSigs: function () { show("Virus & threat protection", "Protection updates"); st.sigs = true; render(); bus.emit("defender:sigupdate", { version: D().sigAfter.version }); },
       customScan: function (folder) { st.folder = folder || D().custom.folder; scan("custom"); },
       act: function (action, id) { act(action, id); },
-      waitScan: function () { return new Promise(function (r) { (function w() { if (!st.scanning) r(); else setTimeout(w, 30); })(); }); }
+      waitScan: function () { return new Promise(function (r) { (function w() { if (!body.isConnected || !st.scanning) r(); else setTimeout(w, 30); })(); }); }
     };
   }
 

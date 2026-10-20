@@ -10,6 +10,7 @@
   function cells(r) { return [(r.enabled === "Yes" ? (r.action === "Block" ? "⊘ " : "✓ ") : "○ ") + r.name, r.group, r.profile, r.enabled, r.action, "No", r.program || "Any", "Any", r.remote, r.proto, r.port]; }
 
   function build(body, win) {
+    var bus = FSIM.core.bus.scoped();
     var st = { node: ROOT, sel: null, inbound: F().inbound.map(toRule), outbound: F().outbound.map(toRule) };
     var root = h("div.mmc"); body.appendChild(root);
     root.appendChild(FSIM.core.menubar(root, { File: [["Exit"]], Action: [["New Rule...", "new"], ["Refresh", "refresh"]], View: [["Customize..."]], Help: [["Help Topics"]] }, function (m, k) { if (k === "new") newRule(); else render(); }));

@@ -68,6 +68,7 @@
   }
 
   function build(body, win) {
+    var bus = FSIM.core.bus.scoped();
     var st = { filter: "", sel: null, rows: packets() };
     var root = h("div.ws-app"); body.appendChild(root);
     var MENUS = { File: [["Open"], ["Save As"]], Edit: [["Find Packet"]], View: [["Zoom In"]], Go: [["Go to Packet"]], Capture: [["Start"]], Analyze: [["Follow ▸ TCP Stream", "follow"], ["Display Filters"]], Statistics: [["Conversations"]], Telephony: [["VoIP Calls"]], Wireless: [["Bluetooth"]], Tools: [["Firewall ACL Rules"]], Help: [["About Wireshark"]] };

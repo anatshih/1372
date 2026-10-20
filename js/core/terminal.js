@@ -6,6 +6,7 @@
   var FSIM = window.FSIM, h = FSIM.core.h, bus = FSIM.core.bus, sleep = FSIM.core.sleep;
 
   function create(host, spec) {
+    var bus = FSIM.core.bus.scoped();
     var history = [], hIdx = 0, busy = false;
     var outEl = h("div.term-log", { role: "log", "aria-live": "off" });
     var promptEl = h("span.term-prompt");
@@ -106,7 +107,7 @@
     renderPrompt();
 
     return {
-      el: term, input: input, out: out,
+      el: term, input: input, out: out, submit: submit,
       focus: function () { input.focus({ preventScroll: true }); },
       refreshPrompt: renderPrompt,
       clear: function () { out.clear(); },
