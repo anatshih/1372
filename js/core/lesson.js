@@ -379,6 +379,7 @@
       stepper = FSIM.core.stepper.create(host, pr.steps, {
         mode: mode,
         onStep: function (st) {
+          var caption = document.querySelector(".demo-caption"); if (caption) caption.hidden = true;
           var m = /data-win=\\?"([a-z]+)\\?"/.exec(st.target || "");
           var w = m && stage && stage.get(m[1]);
           if (w && w.isOpen) w.focus();
